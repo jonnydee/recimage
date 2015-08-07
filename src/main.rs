@@ -51,15 +51,6 @@ impl Canvas {
         }
     }
     
-    fn get_pixel(&self, x : usize, y : usize) -> &Pixel {
-        let dot = self.pixmap.get(x, y);
-        if dot { 
-            &self.pixel
-        } else {
-            &self.empty_pixel
-        }
-    }
-    
     fn get_charmap_size(&self) -> (usize, usize) {
         let width = self.pixmap.width * self.pixel.width;
         let height = self.pixmap.height * self.pixel.height;
@@ -67,12 +58,14 @@ impl Canvas {
     }
     
     fn get_charmap_dot(&self, x : usize, y : usize) -> char {
-        let pixel_at_x : usize = x / self.pixel.width;
-        let pixel_at_y : usize = y / self.pixel.height;
-        let pixel = self.get_pixel(pixel_at_x, pixel_at_y);
+        let pixel_at_x = x / self.pixel.width;
+        let pixel_at_y = y / self.pixel.height;
         
         let pixel_x = x % self.pixel.width;
         let pixel_y = y % self.pixel.height;
+
+        let dot = self.pixmap.get(pixel_at_x, pixel_at_y);
+        let pixel = if dot { &self.pixel } else { &self.empty_pixel };
         pixel.get_dot(pixel_x, pixel_y)
     }
     
@@ -117,42 +110,42 @@ impl Pixmap {
     }
 }
 
-struct Board {
-    depth : usize,
-    pixmap : Pixmap,
-    canvas : Pixmap,
+struct RecursiveImage {
+    icon : Pixmap,
+    buffer : Pixmap,
 }
 
-impl Board {
-    fn new(depth : usize, pixmap : Pixmap) -> Board {
-        let width = pixmap.width.pow(depth as u32);
-        let height = pixmap.height.pow(depth as u32);
-        let canvas = Pixmap::new(width, height);
-        Board {
-            depth : depth,
-            pixmap : pixmap,
-            canvas : canvas,
-        }
+impl RecursiveImage {
+    fn draw(icon : Pixmap, depth : usize) -> Pixmap {
+        let width = icon.width.pow(depth as u32);
+        let height = icon.height.pow(depth as u32);
+        let buffer = Pixmap::new(width, height);
+        let mut image = RecursiveImage {
+            icon : icon,
+            buffer : buffer,
+        };
+        image.draw_pixmap(depth, 0, 0);
+        image.buffer
     }
     
     fn draw_pixmap(&mut self, depth : usize, row : usize, col : usize) {
-        let width = self.pixmap.width.pow(depth as u32);
-        let height = self.pixmap.height.pow(depth as u32);
         if 1 == depth {
-            for y in 0..(self.pixmap.height) {
-                for x in 0..(self.pixmap.width) {
-                    let draw = self.pixmap.get(x, y);
+            for y in 0..(self.icon.height) {
+                for x in 0..(self.icon.width) {
+                    let draw = self.icon.get(x, y);
                     if draw { 
-                        self.canvas.set(col + x, row + y, true);
+                        self.buffer.set(col + x, row + y, true);
                     }
                 }
             }
         } else {
-            let y_step = height / self.pixmap.height;
-            let x_step = width / self.pixmap.width;
-            for y in 0..(self.pixmap.height) {
-                for x in 0..(self.pixmap.width) {
-                    let draw = self.pixmap.get(x, y);
+            let width = self.icon.width.pow(depth as u32);
+            let height = self.icon.height.pow(depth as u32);
+            let x_step = width / self.icon.width;
+            let y_step = height / self.icon.height;
+            for y in 0..(self.icon.height) {
+                for x in 0..(self.icon.width) {
+                    let draw = self.icon.get(x, y);
                     if draw {
                         self.draw_pixmap(depth - 1, row + y * y_step, col + x * x_step);
                     }
@@ -160,30 +153,30 @@ impl Board {
             }
         }
     }
-    
-    fn draw(&mut self) {
-        let depth = self.depth;
-        self.draw_pixmap(depth, 0, 0);
-    }
 }
 
 fn main() {
-    let mut pixel = Pixel::new(3, 3, 'O');
-    pixel.set_dot(1, 1, ' ');
-    let pixel = pixel;
+    let icon : Pixmap;
+    {
+        let mut m_icon = Pixmap::new(3, 3);
+        m_icon.set(1, 0, true);
+        m_icon.set(0, 1, true);
+        m_icon.set(1, 1, true);
+        m_icon.set(2, 1, true);
+        m_icon.set(0, 2, true);
+        m_icon.set(2, 2, true);
+        icon = m_icon;
+    }
         
-    let mut pixmap = Pixmap::new(3, 3);
-    pixmap.set(1, 0, true);
-    pixmap.set(0, 1, true);
-    pixmap.set(1, 1, true);
-    pixmap.set(2, 1, true);
-    pixmap.set(0, 2, true);
-    pixmap.set(2, 2, true);
-    let pixmap = pixmap;
+    let image = RecursiveImage::draw(icon, 3);
     
-    let mut board = Board::new(3, pixmap);
-    board.draw();
-    
-    let canvas = Canvas::new(board.canvas, pixel);
+    let pixel : Pixel;
+    {
+        let mut m_pixel = Pixel::new(3, 3, 'O');
+        m_pixel.set_dot(1, 1, ' ');
+        pixel = m_pixel;
+    }
+        
+    let canvas = Canvas::new(image, pixel);
     canvas.print();
 }
