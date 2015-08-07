@@ -51,12 +51,12 @@ impl Canvas {
         }
     }
     
-    fn get_pixel(&self, x : usize, y : usize) -> Pixel {
+    fn get_pixel(&self, x : usize, y : usize) -> &Pixel {
         let dot = self.pixmap.get(x, y);
         if dot { 
-            self.pixel.clone()
+            &self.pixel
         } else {
-            self.empty_pixel.clone()
+            &self.empty_pixel
         }
     }
     
@@ -71,8 +71,8 @@ impl Canvas {
         let pixel_at_y : usize = y / self.pixel.height;
         let pixel = self.get_pixel(pixel_at_x, pixel_at_y);
         
-        let pixel_x = x % self.empty_pixel.width;
-        let pixel_y = y % self.empty_pixel.height;
+        let pixel_x = x % self.pixel.width;
+        let pixel_y = y % self.pixel.height;
         pixel.get_dot(pixel_x, pixel_y)
     }
     
