@@ -5,15 +5,16 @@ use bit_vec::BitVec;
 struct Pixel {
     width : usize,
     height : usize,
-    buffer : Vec<Vec<char>>,
+    buffer : Vec<char>,
 }
 
 impl Pixel {
     fn new(width : usize, height : usize, dot : char) -> Pixel {
+        let size = width*height;
         Pixel {
             width : width,
             height : height,
-            buffer : vec![vec![dot; width]; height],
+            buffer : vec![dot; size],
         }
     }
 
@@ -22,57 +23,52 @@ impl Pixel {
     }
     
     fn set_dot(&mut self, x : usize, y : usize, dot : char) {
-        self.buffer[y][x] = dot;
+        let offset = y*self.width + x;
+        self.buffer[offset] = dot;
     }
     
     fn get_dot(&self, x : usize, y : usize) -> char {
-        self.buffer[y][x]
+        let offset = y*self.width + x;
+        self.buffer[offset]
     }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 struct Canvas {
-    width : usize,
-    height : usize,
+    pixmap : Pixmap,
+    pixel : Pixel,
     empty_pixel : Pixel,
-    pixelbuf : Vec<Pixel>,
 }
 
 impl Canvas {
-    fn new(width : usize, height : usize, empty_pixel : Pixel) -> Canvas {
-        let pixelbuf_size = width * height;
+    fn new(pixmap : Pixmap, pixel : Pixel) -> Canvas {
+        let empty_pixel = Pixel::new_empty(pixel.width, pixel.height);
         Canvas {
-            width : width,
-            height : height,
-            empty_pixel : empty_pixel.clone(),
-            pixelbuf : vec![empty_pixel; pixelbuf_size],
+            pixmap : pixmap,
+            pixel : pixel,
+            empty_pixel : empty_pixel,
         }
     }
     
-    fn clear(&mut self) {
-        *self = Canvas::new(self.width, self.height, self.empty_pixel.clone());
-    }
-
-    fn set_pixel(&mut self, x : usize, y : usize, pixel : Pixel) {
-        let offset = y * self.width + x;
-        self.pixelbuf[offset] = pixel;
-    }
-    
     fn get_pixel(&self, x : usize, y : usize) -> Pixel {
-        let offset = y * self.width + x;
-        self.pixelbuf[offset].clone()
+        let dot = self.pixmap.get(x, y);
+        if dot { 
+            self.pixel.clone()
+        } else {
+            self.empty_pixel.clone()
+        }
     }
     
     fn get_charmap_size(&self) -> (usize, usize) {
-        let width = self.width * self.empty_pixel.width;
-        let height = self.height * self.empty_pixel.height;
+        let width = self.pixmap.width * self.pixel.width;
+        let height = self.pixmap.height * self.pixel.height;
         (width, height)
     }
     
     fn get_charmap_dot(&self, x : usize, y : usize) -> char {
-        let pixel_at_x : usize = x / self.empty_pixel.width;
-        let pixel_at_y : usize = y / self.empty_pixel.height;
+        let pixel_at_x : usize = x / self.pixel.width;
+        let pixel_at_y : usize = y / self.pixel.height;
         let pixel = self.get_pixel(pixel_at_x, pixel_at_y);
         
         let pixel_x = x % self.empty_pixel.width;
@@ -124,21 +120,18 @@ impl Pixmap {
 struct Board {
     depth : usize,
     pixmap : Pixmap,
-    canvas : Canvas,
-    pixel : Pixel,
+    canvas : Pixmap,
 }
 
 impl Board {
-    fn new(depth : usize, pixmap : Pixmap, pixel : Pixel) -> Board {
+    fn new(depth : usize, pixmap : Pixmap) -> Board {
         let width = pixmap.width.pow(depth as u32);
         let height = pixmap.height.pow(depth as u32);
-        let empty_pixel = Pixel::new_empty(pixel.width, pixel.height);
-        let canvas = Canvas::new(width, height, empty_pixel);
+        let canvas = Pixmap::new(width, height);
         Board {
             depth : depth,
             pixmap : pixmap,
             canvas : canvas,
-            pixel : pixel,
         }
     }
     
@@ -150,7 +143,7 @@ impl Board {
                 for x in 0..(self.pixmap.width) {
                     let draw = self.pixmap.get(x, y);
                     if draw { 
-                        self.canvas.set_pixel(col + x, row + y, self.pixel.clone());
+                        self.canvas.set(col + x, row + y, true);
                     }
                 }
             }
@@ -188,7 +181,9 @@ fn main() {
     pixmap.set(2, 2, true);
     let pixmap = pixmap;
     
-    let mut board = Board::new(3, pixmap, pixel);
+    let mut board = Board::new(3, pixmap);
     board.draw();
-    board.canvas.print();
+    
+    let canvas = Canvas::new(board.canvas, pixel);
+    canvas.print();
 }
