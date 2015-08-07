@@ -1,3 +1,6 @@
+extern crate bit_vec;
+use bit_vec::BitVec;
+
 #[derive(Clone)]
 struct Pixel {
     width : usize,
@@ -92,7 +95,7 @@ impl Canvas {
 struct Pixmap {
     width : usize,
     height : usize,
-    buffer : Vec<Vec<bool>>,
+    buffer : BitVec,
 }
 
 impl Pixmap {
@@ -100,16 +103,21 @@ impl Pixmap {
         Pixmap {
             width : width,
             height : height,
-            buffer : vec![vec![false; width]; height],
+            buffer : BitVec::from_elem(width*height, false),
         }
     }
     
     fn set(&mut self, x : usize, y : usize, flag : bool) {
-        self.buffer[y][x] = flag;
+        let offset = y*self.width + x;
+        self.buffer.set(offset, flag);
     }
     
     fn get(&self, x : usize, y : usize) -> bool {
-        self.buffer[y][x]        
+        let offset = y*self.width + x;
+        match self.buffer.get(offset) {
+            Some(flag) => flag,
+            None => false
+        }
     }
 }
 

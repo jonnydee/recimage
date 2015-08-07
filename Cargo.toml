@@ -7,3 +7,6 @@ authors = [ "Your name <you@example.com>" ]
 [[bin]]
 
 name = "hello_world"
+
+[dependencies]
+bit-vec = "0.4.1"
