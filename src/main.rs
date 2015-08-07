@@ -156,26 +156,24 @@ impl RecursiveImage {
 }
 
 fn main() {
-    let icon : Pixmap;
-    {
-        let mut m_icon = Pixmap::new(3, 3);
-        m_icon.set(1, 0, true);
-        m_icon.set(0, 1, true);
-        m_icon.set(1, 1, true);
-        m_icon.set(2, 1, true);
-        m_icon.set(0, 2, true);
-        m_icon.set(2, 2, true);
-        icon = m_icon;
-    }
+    let icon = {
+        let mut icon = Pixmap::new(3, 3);
+        icon.set(1, 0, true);
+        icon.set(0, 1, true);
+        icon.set(1, 1, true);
+        icon.set(2, 1, true);
+        icon.set(0, 2, true);
+        icon.set(2, 2, true);
+        icon
+    };
         
     let image = RecursiveImage::draw(icon, 3);
     
-    let pixel : Pixel;
-    {
-        let mut m_pixel = Pixel::new(3, 3, 'O');
-        m_pixel.set_dot(1, 1, ' ');
-        pixel = m_pixel;
-    }
+    let pixel = {
+        let mut pixel = Pixel::new(3, 3, 'O');
+        pixel.set_dot(1, 1, ' ');
+        pixel
+    };
         
     let canvas = Canvas::new(image, pixel);
     canvas.print();
