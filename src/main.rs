@@ -114,10 +114,12 @@ impl<'a> RecursiveImage<'a> {
             let x_step = width / self.brush.width;
             let y_step = height / self.brush.height;
             for y in 0..(self.brush.height) {
+                let new_row = row + y * y_step;
                 for x in 0..(self.brush.width) {
+                    let new_col = col + x * x_step;
                     let draw = self.brush.get(x, y);
                     if draw {
-                        self.draw_pixmap(depth - 1, row + y * y_step, col + x * x_step);
+                        self.draw_pixmap(depth - 1, new_row, new_col);
                     }
                 }
             }
@@ -129,19 +131,19 @@ impl<'a> RecursiveImage<'a> {
 
 fn main() {
     let brush = {
-        let mut b = Pixmap::new(7, 7, false);
-        b.set(0, 0, false); b.set(1, 0, false); b.set(2, 0, false); b.set(3, 0, false); b.set(4, 0, false); b.set(5, 0, false); b.set(6, 0, false);
-        b.set(0, 1, true); b.set(1, 1, true); b.set(2, 1, false); b.set(3, 1, false); b.set(4, 1, true); b.set(5, 1, true); b.set(6, 1, true);
-        b.set(0, 2, true); b.set(1, 2, false); b.set(2, 2, true); b.set(3, 2, false); b.set(4, 2, false); b.set(5, 2, false); b.set(6, 2, true);
-        b.set(0, 3, true); b.set(1, 3, false); b.set(2, 3, true); b.set(3, 3, false); b.set(4, 3, false); b.set(5, 3, false); b.set(6, 3, true);
-        b.set(0, 4, true); b.set(1, 4, false); b.set(2, 4, true); b.set(3, 4, false); b.set(4, 4, true); b.set(5, 4, false); b.set(6, 4, true);
-        b.set(0, 5, true); b.set(1, 5, true); b.set(2, 5, false); b.set(3, 5, false); b.set(4, 5, false); b.set(5, 5, true); b.set(6, 5, false);
-        b.set(0, 6, false); b.set(1, 6, false); b.set(2, 6, false); b.set(3, 6, false); b.set(4, 6, false); b.set(5, 6, false); b.set(6, 6, false);
+        let mut b = Pixmap::new(8, 7, false);
+        b.set(0, 0, false); b.set(1, 0, false); b.set(2, 0, false); b.set(3, 0, false); b.set(4, 0, false); b.set(5, 0, false); b.set(6, 0, false); b.set(7, 0, false);
+        b.set(0, 1, true); b.set(1, 1, true); b.set(2, 1, false); b.set(3, 1, false); b.set(4, 1, true); b.set(5, 1, true); b.set(6, 1, true); b.set(7, 1, false);
+        b.set(0, 2, true); b.set(1, 2, false); b.set(2, 2, true); b.set(3, 2, false); b.set(4, 2, false); b.set(5, 2, false); b.set(6, 2, true); b.set(7, 2, false);
+        b.set(0, 3, true); b.set(1, 3, false); b.set(2, 3, true); b.set(3, 3, false); b.set(4, 3, false); b.set(5, 3, false); b.set(6, 3, true); b.set(7, 3, false);
+        b.set(0, 4, true); b.set(1, 4, false); b.set(2, 4, true); b.set(3, 4, false); b.set(4, 4, true); b.set(5, 4, false); b.set(6, 4, true); b.set(7, 4, false);
+        b.set(0, 5, true); b.set(1, 5, true); b.set(2, 5, false); b.set(3, 5, false); b.set(4, 5, false); b.set(5, 5, true); b.set(6, 5, false); b.set(7, 5, false);
+        b.set(0, 6, false); b.set(1, 6, false); b.set(2, 6, false); b.set(3, 6, false); b.set(4, 6, false); b.set(5, 6, false); b.set(6, 6, false); b.set(7, 6, false);
         b
     };
     
-    let pixmap = RecursiveImage::draw(&brush, 5);
-    let pixel = Pixmap::new(3, 3, true);
+    let pixmap = RecursiveImage::draw(&brush, 3);
+    let pixel = Pixmap::new(5, 5, true);
     let canvas = Canvas::new(&pixmap, &pixel);
     
     let img = ImageBuffer::from_fn(canvas.width as u32, canvas.height as u32, |x, y| {
