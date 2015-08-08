@@ -9,4 +9,5 @@ authors = [ "Your name <you@example.com>" ]
 name = "hello_world"
 
 [dependencies]
-bit-vec = "0.4.1"
+bit-vec = "*"
+image = "*"
