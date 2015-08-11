@@ -1,12 +1,10 @@
 [package]
-
-name = "hello_world"
+name = "recursive_image"
 version = "0.0.1"
-authors = [ "Your name <you@example.com>" ]
+authors = [ "Jonny Dee <jonny.dee@gmx.net>" ]
 
 [[bin]]
-
-name = "hello_world"
+name = "recursive_image"
 
 [dependencies]
 bit-vec = "*"

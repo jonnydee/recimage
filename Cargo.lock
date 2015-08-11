@@ -1,5 +1,5 @@
 [root]
-name = "hello_world"
+name = "recursive_image"
 version = "0.0.1"
 dependencies = [
  "bit-vec 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
