@@ -3,9 +3,6 @@ name = "recursive_image"
 version = "0.0.1"
 authors = [ "Jonny Dee <jonny.dee@gmx.net>" ]
 
-[[bin]]
-name = "recursive_image"
-
 [dependencies]
 bit-vec = "*"
 image = "*"
