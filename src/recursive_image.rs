@@ -70,6 +70,34 @@ impl Pixmap {
         }
     }
     
+    pub fn sub_view(&self, x_offset : usize, y_offset : usize, width : usize, height : usize) -> Pixmap {
+        let mut view = Pixmap::new(width, height, false);
+        for y in 0..height {
+            let view_y = y + y_offset;
+            for x in 0..width {
+                let view_x = x + x_offset;
+                if !self.get(view_x, view_y) {
+                    continue;
+                }
+                view.set(x, y, true);
+            }
+        }
+        view
+    }
+
+    pub fn copy_to(&self, other : &mut Pixmap, x_offset : usize, y_offset : usize) {
+        for y in 0..self.height {
+            let other_y = y + y_offset;
+            for x in 0..self.width {
+                let other_x = x + x_offset;
+                if !self.get(x, y) {
+                    continue;
+                }
+                other.set(other_x, other_y, true);
+            }
+        }
+    }
+    
     pub fn set(&mut self, x : usize, y : usize, flag : bool) {
         let offset = y*self.width + x;
         self.buffer.set(offset, flag);
@@ -140,13 +168,22 @@ impl<'a> RecursiveImage<'a> {
             let height = self.brush.height.pow(depth as u32);
             let x_step = width / self.brush.width;
             let y_step = height / self.brush.height;
+            let mut view : Option<Pixmap> = None;
             for y in 0..(self.brush.height) {
-                let new_row = row + y * y_step;
                 for x in 0..(self.brush.width) {
+                    if !self.brush.get(x, y) {
+                        continue;
+                    }
+                    let new_row = row + y * y_step;
                     let new_col = col + x * x_step;
-                    let draw = self.brush.get(x, y);
-                    if draw {
-                        self.draw_pixmap(depth - 1, new_row, new_col);
+                    match view {
+                        None => {
+                            self.draw_pixmap(depth - 1, new_row, new_col);
+                            view = Some(self.buffer.sub_view(new_col, new_row, x_step, y_step));
+                        },
+                        Some(ref pixmap) => {
+                            pixmap.copy_to(&mut self.buffer, new_col, new_row);
+                        }
                     }
                 }
             }
