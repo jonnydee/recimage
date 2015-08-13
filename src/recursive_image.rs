@@ -52,6 +52,7 @@ impl<'a> Canvas<'a> {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#[derive(Clone)]
 pub struct Pixmap {
     pub width : usize,
     pub height : usize,
@@ -131,51 +132,39 @@ impl Pixmap {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub struct RecursiveImage<'a> {
-    pub brush : &'a Pixmap,
-    pub buffer : Pixmap,
-}
+pub fn draw(brush : &Pixmap, depth : usize) -> Pixmap {
+    if 0 == depth {
+        brush.clone()
+    } else {
+        let mut buffer : Pixmap;
+        let x_step : usize;
+        let y_step : usize;
+        {
+            let width = brush.width.pow((depth + 1) as u32);
+            let height = brush.height.pow((depth + 1) as u32);
 
-impl<'a> RecursiveImage<'a> {
-    pub fn draw(brush : &'a Pixmap, depth : usize) -> Pixmap {
-        let width = brush.width.pow(depth as u32);
-        let height = brush.height.pow(depth as u32);
-        let buffer = Pixmap::new(width, height, false);
-        let mut image = RecursiveImage {
-            brush : brush,
-            buffer : buffer,
-        };
-        image.draw_pixmap(depth, 0, 0);
-        image.buffer
-    }
-    
-    fn draw_pixmap(&mut self, depth : usize, row : usize, col : usize) {
-        if 1 == depth {
-            self.brush.copy_to(&mut self.buffer, col, row);
-        } else {
-            let width = self.brush.width.pow(depth as u32);
-            let height = self.brush.height.pow(depth as u32);
-            let x_step = width / self.brush.width;
-            let y_step = height / self.brush.height;
-            let mut view : Option<Pixmap> = None;
-            for y in 0..(self.brush.height) {
-                for x in 0..(self.brush.width) {
-                    if !self.brush.get(x, y) {
-                        continue;
-                    }
-                    let new_row = row + y * y_step;
-                    let new_col = col + x * x_step;
-                    match view {
-                        None => {
-                            self.draw_pixmap(depth - 1, new_row, new_col);
-                            view = Some(self.buffer.sub_view(new_col, new_row, x_step, y_step));
-                        },
-                        Some(ref pixmap) => {
-                            pixmap.copy_to(&mut self.buffer, new_col, new_row);
-                        }
-                    }
+            x_step = width / brush.width;
+            y_step = height / brush.height;
+
+            buffer = Pixmap::new(width, height, false);
+        }
+
+        let mut view : Option<Pixmap> = None;
+        for y in 0..brush.height {
+            let pos_y = y * y_step;
+            for x in 0..brush.width {
+                if !brush.get(x, y) {
+                    continue;
                 }
+                let pos_x = x * x_step;
+                
+                if view.is_none() {
+                    view = Some(draw(brush, depth - 1));
+                }
+                let sub_view = view.as_ref().unwrap();
+                sub_view.copy_to(&mut buffer, pos_x, pos_y);
             }
         }
+        buffer
     }
 }

@@ -4,13 +4,13 @@ extern crate recursive_image;
 use image::{ GenericImage, ImageBuffer };
 use std::fs::File;
 use std::path::Path;
-use recursive_image::{ Canvas, RecursiveImage, Pixmap };
+use recursive_image::{ Canvas, Pixmap };
 
 fn main() {
     let brush = Pixmap::from_file("brush.txt").unwrap();
     let pixel = Pixmap::from_file("pixel.txt").unwrap();
     
-    let pixmap = RecursiveImage::draw(&brush, 3);
+    let pixmap = recursive_image::draw(&brush, 2);
     let canvas = Canvas::new(&pixmap, &pixel);
     
     let img = ImageBuffer::from_fn(canvas.width as u32, canvas.height as u32, |x, y| {
