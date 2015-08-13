@@ -4,5 +4,4 @@ version = "0.0.1"
 authors = [ "Jonny Dee <jonny.dee@gmx.net>" ]
 
 [dependencies]
-bit-vec = "*"
 image = "*"

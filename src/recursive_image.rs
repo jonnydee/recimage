@@ -1,6 +1,3 @@
-extern crate bit_vec;
-
-use self::bit_vec::BitVec;
 use std::cmp;
 use std::fs::File;
 use std::io::BufReader;
@@ -37,8 +34,8 @@ impl<'a> Canvas<'a> {
         let pixel_x = x % self.pixel.width;
         let pixel_y = y % self.pixel.height;
 
-        let dot = self.pixmap.get(pixel_at_x, pixel_at_y);
-        let pixel = if dot { self.pixel } else { &self.empty_pixel };
+        let flag = self.pixmap.get(pixel_at_x, pixel_at_y);
+        let pixel = if flag { self.pixel } else { &self.empty_pixel };
         pixel.get(pixel_x, pixel_y)
     }
     
@@ -58,7 +55,7 @@ impl<'a> Canvas<'a> {
 pub struct Pixmap {
     pub width : usize,
     pub height : usize,
-    buffer : BitVec,
+    buffer : Vec<Vec<bool>>,
 }
 
 impl Pixmap {
@@ -66,7 +63,7 @@ impl Pixmap {
         Pixmap {
             width : width,
             height : height,
-            buffer : BitVec::from_elem(width*height, filled),
+            buffer : vec![vec![filled; width]; height],
         }
     }
     
@@ -90,22 +87,19 @@ impl Pixmap {
             let other_y = y + y_offset;
             for x in 0..self.width {
                 let other_x = x + x_offset;
-                if !self.get(x, y) {
-                    continue;
+                if self.get(x, y) {
+                    other.set(other_x, other_y, true);
                 }
-                other.set(other_x, other_y, true);
             }
         }
     }
     
     pub fn set(&mut self, x : usize, y : usize, flag : bool) {
-        let offset = y*self.width + x;
-        self.buffer.set(offset, flag);
+        self.buffer[y][x] = flag;
     }
     
     pub fn get(&self, x : usize, y : usize) -> bool {
-        let offset = y*self.width + x;
-        self.buffer.get(offset).unwrap()
+        self.buffer[y][x]
     }
 
     pub fn from_file(file_name : &str) -> Result<Pixmap, Error> {
@@ -126,7 +120,9 @@ impl Pixmap {
         for (y, row) in matrix.iter().enumerate() {
             for (x, c) in row.iter().enumerate() {
                 let flag = *c != ' ';
-                pixmap.set(x, y, flag);
+                if flag {
+                    pixmap.set(x, y, true);
+                }
             }
         }
         Ok(pixmap)
@@ -155,14 +151,7 @@ impl<'a> RecursiveImage<'a> {
     
     fn draw_pixmap(&mut self, depth : usize, row : usize, col : usize) {
         if 1 == depth {
-            for y in 0..(self.brush.height) {
-                for x in 0..(self.brush.width) {
-                    let draw = self.brush.get(x, y);
-                    if draw { 
-                        self.buffer.set(col + x, row + y, true);
-                    }
-                }
-            }
+            self.brush.copy_to(&mut self.buffer, col, row);
         } else {
             let width = self.brush.width.pow(depth as u32);
             let height = self.brush.height.pow(depth as u32);

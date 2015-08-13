@@ -2,7 +2,6 @@
 name = "recursive_image"
 version = "0.0.1"
 dependencies = [
- "bit-vec 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.3.11 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -14,11 +13,6 @@ dependencies = [
  "winapi 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi-build 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
-
-[[package]]
-name = "bit-vec"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "byteorder"
