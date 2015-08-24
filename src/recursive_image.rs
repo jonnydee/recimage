@@ -5,104 +5,20 @@ use std::io::BufRead;
 use std::io::Error;
 
 
-pub struct Canvas<'a> {
-    pub width : usize,
-    pub height : usize,
-    pub pixmap : &'a Pixmap,
-    pub pixel : &'a Pixmap,
-    empty_pixel : Pixmap,
+pub trait Data {
+    fn get_dimension(&self, depth : usize) -> (usize, usize);
+    fn get_point(&self, depth : usize, x : usize, y : usize) -> bool;
 }
 
-impl<'a> Canvas<'a> {
-    pub fn new(pixmap : &'a Pixmap, pixel : &'a Pixmap) -> Canvas<'a> {
-        let empty_pixel = Pixmap::new(pixel.width, pixel.height, false);
-        let width = pixmap.width * pixel.width;
-        let height = pixmap.height * pixel.height;
-        Canvas {
-            width : width,
-            height : height,
-            pixmap : &pixmap,
-            pixel : &pixel,
-            empty_pixel : empty_pixel,
-        }
-    }
-    
-    pub fn get(&self, x : usize, y : usize) -> bool {
-        let pixel_at_x = x / self.pixel.width;
-        let pixel_at_y = y / self.pixel.height;
-        
-        let pixel_x = x % self.pixel.width;
-        let pixel_y = y % self.pixel.height;
-
-        let flag = self.pixmap.get(pixel_at_x, pixel_at_y);
-        let pixel = if flag { self.pixel } else { &self.empty_pixel };
-        pixel.get(pixel_x, pixel_y)
-    }
-    
-    pub fn print(&self) {
-        for y in 0..self.height {
-            for x in 0..self.width {
-                let dot = if self.get(x, y) { '*' } else { ' ' };
-                print!("{}", dot);
-            }
-            println!("");
-        }
-    }
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-
-#[derive(Clone)]
-pub struct Pixmap {
-    pub width : usize,
-    pub height : usize,
-    buffer : Vec<Vec<bool>>,
+pub struct Pixmap
+{
+    width : usize,
+    height : usize,
+    data : Vec<Vec<bool>>,
 }
 
 impl Pixmap {
-    pub fn new(width : usize, height : usize, filled : bool) -> Pixmap {
-        Pixmap {
-            width : width,
-            height : height,
-            buffer : vec![vec![filled; width]; height],
-        }
-    }
     
-    pub fn sub_view(&self, x_offset : usize, y_offset : usize, width : usize, height : usize) -> Pixmap {
-        let mut view = Pixmap::new(width, height, false);
-        for y in 0..height {
-            let view_y = y + y_offset;
-            for x in 0..width {
-                let view_x = x + x_offset;
-                if !self.get(view_x, view_y) {
-                    continue;
-                }
-                view.set(x, y, true);
-            }
-        }
-        view
-    }
-
-    pub fn copy_to(&self, other : &mut Pixmap, x_offset : usize, y_offset : usize) {
-        for y in 0..self.height {
-            let other_y = y + y_offset;
-            for x in 0..self.width {
-                let other_x = x + x_offset;
-                if self.get(x, y) {
-                    other.set(other_x, other_y, true);
-                }
-            }
-        }
-    }
-    
-    pub fn set(&mut self, x : usize, y : usize, flag : bool) {
-        self.buffer[y][x] = flag;
-    }
-    
-    pub fn get(&self, x : usize, y : usize) -> bool {
-        self.buffer[y][x]
-    }
-
     pub fn from_file(file_name : &str) -> Result<Pixmap, Error> {
         let f = try!(File::open(file_name));
         let file = BufReader::new(&f);
@@ -117,54 +33,75 @@ impl Pixmap {
         }
         let height = matrix.len();
         
-        let mut pixmap = Pixmap::new(width, height, false);
+        let mut data : Vec<_> = vec![vec![false; width]; height];
         for (y, row) in matrix.iter().enumerate() {
             for (x, c) in row.iter().enumerate() {
                 let flag = *c != ' ';
                 if flag {
-                    pixmap.set(x, y, true);
+                    data[y][x] = true;
                 }
             }
         }
-        Ok(pixmap)
+        let brush = Pixmap { width : width, height : height, data : data };
+        Ok(brush)
     }
+
+}
+
+impl Data for Pixmap {
+    
+    fn get_dimension(&self, depth : usize) -> (usize, usize) {
+        let width = self.width.pow((depth + 1) as u32);
+        let height = self.height.pow((depth + 1) as u32);
+        (width, height)    
+    }
+    
+    fn get_point(&self, depth : usize, x : usize, y : usize) -> bool {
+        if 0 == depth {
+            return self.data[y][x];
+        }
+        
+        let (elem_width, elem_height) = self.get_dimension(depth - 1);
+        let (elem_x, elem_y) = (x / elem_width, y / elem_height);
+        if !self.data[elem_y][elem_x] {
+            return false;
+        }
+        let (sub_x, sub_y) = (x % elem_width, y % elem_height);
+        self.get_point(depth - 1, sub_x, sub_y)
+    }
+    
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-pub fn draw(brush : &Pixmap, depth : usize) -> Pixmap {
-    if 0 == depth {
-        brush.clone()
-    } else {
-        let mut buffer : Pixmap;
-        let x_step : usize;
-        let y_step : usize;
-        {
-            let width = brush.width.pow((depth + 1) as u32);
-            let height = brush.height.pow((depth + 1) as u32);
+pub struct Canvas {
+    pixel : Pixmap,
+    brush : Pixmap,
+}
 
-            x_step = width / brush.width;
-            y_step = height / brush.height;
-
-            buffer = Pixmap::new(width, height, false);
+impl Canvas {
+    
+    pub fn new(pixel : Pixmap, brush : Pixmap) -> Canvas {
+        return Canvas {
+            pixel : pixel,
+            brush : brush,
         }
-
-        let mut view : Option<Pixmap> = None;
-        for y in 0..brush.height {
-            let pos_y = y * y_step;
-            for x in 0..brush.width {
-                if !brush.get(x, y) {
-                    continue;
-                }
-                let pos_x = x * x_step;
-                
-                if view.is_none() {
-                    view = Some(draw(brush, depth - 1));
-                }
-                let sub_view = view.as_ref().unwrap();
-                sub_view.copy_to(&mut buffer, pos_x, pos_y);
-            }
-        }
-        buffer
     }
+    
+}
+
+impl Data for Canvas {
+    
+    fn get_dimension(&self, depth : usize) -> (usize, usize) {
+        let (width, height) = self.brush.get_dimension(depth);
+        (width * self.pixel.width, height * self.pixel.height)
+    }
+        
+    fn get_point(&self, depth : usize, x : usize, y : usize) -> bool {
+        if !self.pixel.data[y % self.pixel.height][x % self.pixel.width] {
+            return false;
+        }
+        self.brush.get_point(depth, x / self.pixel.width, y / self.pixel.height)
+    }
+
 }
