@@ -1,6 +1,6 @@
 [package]
 authors = [ "Johann Duscher <jonny.dee@gmx.net>" ]
-license = "MIT"
+license = "BSD-2-Clause"
 name = "recimage"
 version = "1.0.0"
 
