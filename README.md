@@ -6,4 +6,4 @@ The simplest way to create a self-recursive image is to execute 'recimage' on a 
 	
 This will create a PNG image like this:
 
-![logo.txt.png](/doc/logo.txt.png?raw=true "logo.txt.png")
+![logo.txt.png](doc/logo.txt.png?raw=true "logo.txt.png")
