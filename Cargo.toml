@@ -1,5 +1,6 @@
 [package]
-authors = [ "Jonny Dee <jonny.dee@gmx.net>" ]
+authors = [ "Johann Duscher <jonny.dee@gmx.net>" ]
+license = "MIT"
 name = "recursive_image"
 version = "1.0.0"
 
