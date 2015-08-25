@@ -1,5 +1,5 @@
 [root]
-name = "recursive_image"
+name = "recimage"
 version = "1.0.0"
 dependencies = [
  "getopts 0.2.13 (registry+https://github.com/rust-lang/crates.io-index)",

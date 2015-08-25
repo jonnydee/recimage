@@ -24,6 +24,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-pub mod recursive_image;
+pub mod recimage;
 
-pub use recursive_image::*;
+pub use recimage::*;

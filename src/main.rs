@@ -26,12 +26,12 @@
 
 extern crate getopts;
 extern crate image;
-extern crate recursive_image;
+extern crate recimage;
 
 use getopts::Options;
 use image::{ ImageBuffer };
 use std::env;
-use recursive_image::{ Data, Canvas, Pixmap };
+use recimage::{ Data, Canvas, Pixmap };
 
 const AUTHOR: &'static str = "Jonny Dee <jonny.dee@gmx.net>";
 const COPYRIGHT_YEARS: &'static str = "2015";
@@ -45,8 +45,8 @@ fn main() {
     let mut opts = Options::new();
     opts.optflag("h", "help", "print this help menu");
     opts.optopt("d", "depth", "set recursion depth", "DEPTH");
-    opts.optopt("o", "output", "set output file name", "NAME");
-    opts.optopt("p", "pixel", "set pixel file name", "NAME");
+    opts.optopt("o", "output", "set output image file name", "FILE");
+    opts.optopt("p", "pixel", "set input pixel file name", "FILE");
     opts.optflag("v", "", "print version number");
     opts.optflag("", "version", "print full version information");
     
