@@ -1,7 +1,8 @@
 [package]
+authors = [ "Jonny Dee <jonny.dee@gmx.net>" ]
 name = "recursive_image"
 version = "0.0.1"
-authors = [ "Jonny Dee <jonny.dee@gmx.net>" ]
 
 [dependencies]
+getopts = "*"
 image = "*"
