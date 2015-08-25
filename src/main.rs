@@ -1,12 +1,10 @@
+extern crate getopts;
 extern crate image;
 extern crate recursive_image;
-extern crate getopts;
 
 use getopts::Options;
 use image::{ ImageBuffer };
 use std::env;
-//use std::fs::File;
-//use std::path::Path;
 use recursive_image::{ Data, Canvas, Pixmap };
 
 fn main() {
