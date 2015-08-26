@@ -24,6 +24,7 @@
 // authors and should not be interpreted as representing official policies, either expressed
 // or implied, of Johann Duscher.
 
-mod recimage;
-
-pub use recimage::*;
+pub trait Data {
+    fn get_dimension(&self, depth : usize) -> (usize, usize);
+    fn get_point(&self, depth : usize, x : usize, y : usize) -> bool;
+}

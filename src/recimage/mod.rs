@@ -24,6 +24,10 @@
 // authors and should not be interpreted as representing official policies, either expressed
 // or implied, of Johann Duscher.
 
-mod recimage;
+mod canvas;
+mod data;
+mod pixmap;
 
-pub use recimage::*;
+pub use self::canvas::*;
+pub use self::data::*;
+pub use self::pixmap::*;
